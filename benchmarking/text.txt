@@ -1,0 +1,29 @@
+1. Convergence Speed
+
+Number of iterations until convergence
+Wall-clock time (seconds)
+Goal: K-Means++ should converge 20-30% faster than naive
+
+2. Quality Metrics
+
+Inertia (sum of squared distances to centroids) - lower is better
+Silhouette score (optional) - measures cluster separation
+Goal: LAB color space should produce perceptually better palettes
+
+3. Stability
+
+Run each algorithm multiple times (like 10 runs)
+Measure variance in results
+Goal: K-Means++ should be more consistent (less variance across runs)
+
+Comparison structure:
+
+Same image, same k value (like k=5)
+Run all 3 algorithms: Naive, K-Means++, LAB K-Means++
+Compare: iterations, time, final inertia, visual quality
+
+Visual outputs:
+
+Bar charts (iterations/time comparison)
+Line plots (inertia over iterations)
+Side-by-side palette images
