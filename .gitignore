@@ -1,0 +1,71 @@
+# --- General Operating System and Editor Files ---
+.DS_Store # macOS
+Thumbs.db # Windows
+*~
+*.swp # Vim swap files
+.idea/ # IntelliJ/WebStorm
+.vscode/ # VS Code settings
+.sublime-workspace # Sublime Text
+
+# --- Dependencies & Build Output ---
+# Dependencies (often downloaded via package manager)
+/node_modules
+/vendor
+
+# Build and Compilation Output
+/build
+/dist
+/out
+/target
+
+# --- Crucial Security Exclusions ---
+# ALWAYS ignore files containing sensitive data like API keys, secrets, or passwords.
+# Use environment variables or a separate, non-tracked configuration file instead.
+.env
+.env.local
+.config.json
+secret.key
+*.pem
+*.key
+
+# Existing Generic Content...
+
+# Node.js Specific
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Next.js / Static Site Generators
+.next/
+/out/
+
+# Existing Generic Content...
+
+# Python Specific
+__pycache__/
+*.pyc
+*.pyd
+*.o
+*.egg
+*.egg-info/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Virtual Environments
+/venv
+/env
+
+# Existing Generic Content...
+
+# Java Specific
+# Compiled class files
+*.class
+
+# Maven build output
+/target/
+pom.xml.tag
+pom.xml.bak
+pom.xml.versionsBackup
