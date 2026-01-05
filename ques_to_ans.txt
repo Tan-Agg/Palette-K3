@@ -1,0 +1,7 @@
+Why do we alternate between assignment and update steps?
+
+Why is the algorithm guaranteed to converge (hint: inertia always decreases)?
+
+What's a "local minimum" and why is it a problem?
+
+How does random initialization cause issues?

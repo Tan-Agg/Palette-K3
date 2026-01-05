@@ -1,26 +1,37 @@
 from PIL import Image
 import numpy as np
+from skimage import color
 
-def load_image_as_array(image_path):
-    """
-    Load an image from the specified path and convert it to a numpy array of shape (N, 3),
-    where N is the number of pixels and each pixel is represented by its RGB values.
+# def load_image_as_array(image_path):
+#     """
+#     Load an image from the specified path and convert it to a numpy array of shape (N, 3),
+#     where N is the number of pixels and each pixel is represented by its RGB values.
     
-    Parameters:
-    - image_path: str, path to the image file.
+#     Parameters:
+#     - image_path: str, path to the image file.
     
-    Returns:
-    - pixels: numpy array of shape (N, 3)
-    """
-    # Open the image using PIL
+#     Returns:
+#     - pixels: numpy array of shape (N, 3)
+#     """
+#     # Open the image using PIL
+#     image = Image.open(image_path).convert('RGB')
+    
+#     # Convert the image to a numpy array
+#     image_array = np.array(image)
+    
+#     # Reshape the array to (N, 3)
+#     pixels = image_array.reshape(-1, 3)
+    
+#     return pixels
+def load_image_as_array(image_path, max_size=300):
     image = Image.open(image_path).convert('RGB')
     
-    # Convert the image to a numpy array
+    # Resize if too large
+    if max(image.size) > max_size:
+        image.thumbnail((max_size, max_size))
+    
     image_array = np.array(image)
-    
-    # Reshape the array to (N, 3)
     pixels = image_array.reshape(-1, 3)
-    
     return pixels
 # load_image_as_array(image_path)
 # Should use PIL to open image
@@ -71,3 +82,36 @@ def calculate_inertia(pixels, centroids, assignments):
 # Calculate squared distance to that centroid
 # Sum all squared distances
 # Return total inertia
+
+
+def rgb_to_lab(rgb_array):
+    """
+    Convert RGB array (Nx3, values 0-255) to LAB color space
+    """
+    # Normalize to [0, 1]
+    rgb_normalized = rgb_array / 255.0
+    
+    # Reshape for skimage (needs 3D array)
+    original_shape = rgb_normalized.shape
+    rgb_reshaped = rgb_normalized.reshape(-1, 1, 3)
+    
+    # Convert RGB -> LAB
+    lab = color.rgb2lab(rgb_reshaped)
+    
+    # Reshape back to (N, 3)
+    return lab.reshape(original_shape)
+
+def lab_to_rgb(lab_array):
+    """
+    Convert LAB array (Nx3) back to RGB (0-255)
+    """
+    # Reshape for skimage
+    original_shape = lab_array.shape
+    lab_reshaped = lab_array.reshape(-1, 1, 3)
+    
+    # Convert LAB -> RGB
+    rgb = color.lab2rgb(lab_reshaped)
+    
+    # Reshape and scale to 0-255
+    rgb = rgb.reshape(original_shape)
+    return (rgb * 255).clip(0, 255).astype(np.uint8)
