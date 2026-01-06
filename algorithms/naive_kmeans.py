@@ -40,6 +40,7 @@ class NaiveKMeans:
                 pixels[:, np.newaxis, :] - self.centroids[np.newaxis, :, :], 
                 axis=-1
             )
+            
             self.labels = np.argmin(distances, axis=-1)
             
             # Update step: recalculate centroids
