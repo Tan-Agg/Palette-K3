@@ -32,7 +32,10 @@ def load_image_as_array(image_path, max_size=300):
     
     image_array = np.array(image)
     pixels = image_array.reshape(-1, 3)
-    return pixels
+
+    return pixels, image_array, image_array.shape
+
+
 # load_image_as_array(image_path)
 # Should use PIL to open image
 # Convert to RGB (in case it's RGBA or grayscale)

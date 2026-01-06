@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from algorithms.utils import load_image_as_array, rgb_to_lab, lab_to_rgb
-
+try:
+    from algorithms.utils import load_image_as_array, rgb_to_lab, lab_to_rgb
+except ImportError:
+    from utils import load_image_as_array, rgb_to_lab, lab_to_rgb
+    
 class NaiveKMeansLAB:
-    def __init__(self, k=5, max_iter=100, tol=0.01, random_state=None):
+    def __init__(self, k=10, max_iter=100, tol=0.01, random_state=None):
         self.k = k
         self.max_iter = max_iter
         self.tol = tol
@@ -85,7 +88,10 @@ class NaiveKMeansLAB:
         pixels_rgb: original RGB pixels (Nx3)
         """
         # Convert LAB centroids back to RGB
-        from algorithms.utils import lab_to_rgb
+        try:
+            from algorithms.utils import lab_to_rgb
+        except ImportError:
+            from utils import lab_to_rgb
         centroids_rgb = lab_to_rgb(self.centroids_lab)
         
         # Calculate which centroid each pixel is closest to (in RGB space)
@@ -162,7 +168,7 @@ if __name__ == "__main__":
     print(f"Image loaded: {pixels.shape[0]} pixels")
     
     # Run LAB K-Means++
-    kmeans = NaiveKMeansLAB(k=5, max_iter=100, random_state=42)
+    kmeans = NaiveKMeansLAB(k=10, max_iter=100, random_state=42)
     kmeans.fit(pixels)
     
     # Show results

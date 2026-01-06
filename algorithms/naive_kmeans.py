@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from algorithms.utils import load_image_as_array, rgb_to_lab, lab_to_rgb
+try:
+    from algorithms.utils import load_image_as_array, rgb_to_lab, lab_to_rgb
+except ImportError:
+    from utils import load_image_as_array, rgb_to_lab, lab_to_rgb
 
 class NaiveKMeans:
-    def __init__(self, k=5, max_iter=100, tol=0.01, random_state=None):
+    def __init__(self, k=10, max_iter=100, tol=0.01, random_state=None):
         self.k = k
         self.max_iter = max_iter
         self.tol = tol
@@ -83,7 +86,10 @@ class NaiveKMeans:
         Calculate inertia in LAB space for fair comparison with LAB algorithms
         pixels_rgb: original RGB pixels (Nx3)
         """
-        from algorithms.utils import rgb_to_lab
+        try:
+            from algorithms.utils import rgb_to_lab
+        except ImportError: 
+            from utils import rgb_to_lab
         
         # Convert RGB centroids and pixels to LAB
         centroids_lab = rgb_to_lab(self.centroids)
@@ -168,7 +174,7 @@ if __name__ == "__main__":
     print(f"Image loaded: {pixels.shape[0]} pixels")
     
     # Run K-Means
-    kmeans = NaiveKMeans(k=5, max_iter=100, random_state=42)
+    kmeans = NaiveKMeans(k=10, max_iter=100, random_state=42)
     kmeans.fit(pixels)
     
     # Show results

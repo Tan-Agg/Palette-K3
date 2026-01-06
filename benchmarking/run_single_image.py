@@ -1,109 +1,161 @@
+import time
+import numpy as np
+import matplotlib.pyplot as plt
 import sys
 import os
-import numpy as np
-from pathlib import Path
 
-# Add parent directory to path to import from algorithms
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, PROJECT_ROOT)
 
+
+# Algorithms
 from algorithms.naive_kmeans import NaiveKMeans
-from algorithms.kmeans_plusplus import KMeansPlusPlus
 from algorithms.naive_kmeans_lab import NaiveKMeansLAB
+from algorithms.kmeans_plusplus import KMeansPlusPlus
 from algorithms.lab_kmeans import LABKMeansPlusPlus
+
 from algorithms.utils import load_image_as_array
 
-def run_single_image_comparison(image_path, k=8, max_iterations=100):
-    """
-    Run all 4 K-Means variants on a single image and compare results
-    """
-    print(f"\n{'='*60}")
-    print(f"Processing: {Path(image_path).name}")
-    print(f"K={k}, Max Iterations={max_iterations}")
-    print(f"{'='*60}\n")
-    
+
+# -------------------------------------------------------
+# Helper functions
+# -------------------------------------------------------
+
+def reconstruct_image(pixels, labels, centroids, image_shape):
+    """Reconstruct quantized image from labels and centroids"""
+    quantized = centroids[labels].astype(np.uint8)
+    return quantized.reshape(image_shape)
+
+
+def run_algorithm(name, model, pixels):
+    """Run algorithm, measure runtime, collect metrics"""
+    start = time.time()
+    model.fit(pixels)
+    runtime = time.time() - start
+
+    result = {
+        "name": name,
+        "model": model,
+        "runtime": runtime,
+        "iterations": model.n_iterations,
+        "palette": model.get_palette(),
+        "labels": model.labels
+    }
+
+    # Unified inertia reporting
+    result["inertia_rgb"] = getattr(model, "inertia_rgb", model.inertia)
+    result["inertia_lab"] = getattr(model, "inertia_lab", model.inertia)
+
+    return result
+
+
+# -------------------------------------------------------
+# Main benchmark
+# -------------------------------------------------------
+
+def main():
+    #ATH = "../test_images/Test_image1.jpg"
+    IMAGE_PATH = os.path.join(PROJECT_ROOT, "test_images", "Test_image1.jpg")
+    K = 10
+    MAX_ITER = 100
+    RANDOM_STATE = 42
+
     # Load image
-    pixels_rgb = load_image_as_array(image_path)
-    print(f"Image loaded: {pixels_rgb.shape[0]} pixels")
-    
-    results = {}
-    
-    # 1. Naive K-Means (RGB)
-    print("\n[1/4] Running Naive K-Means (RGB)...")
-    kmeans_naive_rgb = NaiveKMeans(k=k, max_iterations=max_iterations)
-    kmeans_naive_rgb.fit(pixels_rgb)
-    results['Naive (RGB)'] = {
-        'iterations': kmeans_naive_rgb.iterations,
-        'inertia_rgb': kmeans_naive_rgb.inertia,
-        'inertia_lab': kmeans_naive_rgb.calculate_lab_inertia(pixels_rgb),
-        'centroids': kmeans_naive_rgb.centroids
-    }
-    print(f"   Converged in {kmeans_naive_rgb.iterations} iterations")
-    
-    # 2. K-Means++ (RGB)
-    print("\n[2/4] Running K-Means++ (RGB)...")
-    kmeans_pp_rgb = KMeansPlusPlus(k=k, max_iterations=max_iterations)
-    kmeans_pp_rgb.fit(pixels_rgb)
-    results['K++ (RGB)'] = {
-        'iterations': kmeans_pp_rgb.iterations,
-        'inertia_rgb': kmeans_pp_rgb.inertia,
-        'inertia_lab': kmeans_pp_rgb.calculate_lab_inertia(pixels_rgb),
-        'centroids': kmeans_pp_rgb.centroids
-    }
-    print(f"   Converged in {kmeans_pp_rgb.iterations} iterations")
-    
-    # 3. Naive K-Means (LAB)
-    print("\n[3/4] Running Naive K-Means (LAB)...")
-    kmeans_naive_lab = NaiveKMeansLAB(k=k, max_iterations=max_iterations)
-    kmeans_naive_lab.fit(pixels_rgb)
-    results['Naive (LAB)'] = {
-        'iterations': kmeans_naive_lab.iterations,
-        'inertia_rgb': kmeans_naive_lab.calculate_rgb_inertia(pixels_rgb),
-        'inertia_lab': kmeans_naive_lab.inertia_lab,
-        'centroids': kmeans_naive_lab.centroids_lab
-    }
-    print(f"   Converged in {kmeans_naive_lab.iterations} iterations")
-    
-    # 4. K-Means++ (LAB)
-    print("\n[4/4] Running K-Means++ (LAB)...")
-    kmeans_pp_lab = LABKMeansPlusPlus(k=k, max_iterations=max_iterations)
-    kmeans_pp_lab.fit(pixels_rgb)
-    results['K++ (LAB)'] = {
-        'iterations': kmeans_pp_lab.iterations,
-        'inertia_rgb': kmeans_pp_lab.calculate_rgb_inertia(pixels_rgb),
-        'inertia_lab': kmeans_pp_lab.inertia_lab,
-        'centroids': kmeans_pp_lab.centroids_lab
-    }
-    print(f"   Converged in {kmeans_pp_lab.iterations} iterations")
-    
+    pixels, img, image_shape = load_image_as_array(IMAGE_PATH)
+    # Infer image shape from flattened pixels
+    # num_pixels = pixels.shape[0]
+    # image_shape = (int(np.sqrt(num_pixels)), int(num_pixels / int(np.sqrt(num_pixels))), 3)
+
+
+    print(f"Loaded image with {pixels.shape[0]} pixels")
+
+    # Define algorithms
+    algorithms = [
+        ("Naive K-Means (RGB)", NaiveKMeans(k=K, max_iter=MAX_ITER, random_state=RANDOM_STATE)),
+        ("K-Means++ (RGB)", KMeansPlusPlus(k=K, max_iter=MAX_ITER, random_state=RANDOM_STATE)),
+        ("Naive K-Means (LAB)", NaiveKMeansLAB(k=K, max_iter=MAX_ITER, random_state=RANDOM_STATE)),
+        ("K-Means++ (LAB)", LABKMeansPlusPlus(k=K, max_iter=MAX_ITER, random_state=RANDOM_STATE)),
+    ]
+
+    results = []
+
+    # Run all algorithms
+    for name, model in algorithms:
+        print(f"\nRunning {name}...")
+        results.append(run_algorithm(name, model, pixels))
+
+    # ---------------------------------------------------
     # Print comparison table
-    print(f"\n{'='*60}")
-    print("RESULTS SUMMARY")
-    print(f"{'='*60}")
-    print(f"{'Method':<15} {'Iterations':<12} {'Inertia (RGB)':<18} {'Inertia (LAB)':<18}")
-    print(f"{'-'*60}")
-    
-    for method, data in results.items():
-        print(f"{method:<15} {data['iterations']:<12} {data['inertia_rgb']:<18.2e} {data['inertia_lab']:<18.2e}")
-    
-    print(f"{'='*60}\n")
-    
-    return results
+    # ---------------------------------------------------
+
+    print("\n================ Benchmark Results ================\n")
+    header = f"{'Method':30s} {'Iter':>6s} {'RGB Inertia':>15s} {'LAB Inertia':>15s} {'Time (s)':>10s}"
+    print(header)
+    print("-" * len(header))
+
+    for r in results:
+        print(
+            f"{r['name']:30s} "
+            f"{r['iterations']:6d} "
+            f"{r['inertia_rgb']:15.2f} "
+            f"{r['inertia_lab']:15.2f} "
+            f"{r['runtime']:10.3f}"
+        )
+
+    # ---------------------------------------------------
+    # Visualization grid
+    # ---------------------------------------------------
+
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    axes = axes.flatten()
+
+    # Original image
+    axes[0].imshow(img)
+    axes[0].set_title("Input Image (Resized)")
+    axes[0].axis("off")
+
+    # Quantized images
+    for i, r in enumerate(results, start=1):
+        quantized_img = reconstruct_image(
+            pixels,
+            r["labels"],
+            r["palette"],
+            image_shape
+        )
+
+        axes[i].imshow(quantized_img)
+        axes[i].set_title(r["name"])
+        axes[i].axis("off")
+
+    # Hide unused subplot
+    axes[-1].axis("off")
+
+    plt.suptitle("Color Quantization Comparison (k=10)", fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+    # ---------------------------------------------------
+    # Palette comparison
+    # ---------------------------------------------------
+
+    fig, axes = plt.subplots(len(results), 1, figsize=(12, 8))
+
+    for ax, r in zip(axes, results):
+        palette = r["palette"]
+        for i, color in enumerate(palette):
+            ax.add_patch(
+                plt.Rectangle((i, 0), 1, 1, color=color / 255)
+            )
+        ax.set_xlim(0, K)
+        ax.set_ylim(0, 1)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(r["name"])
+
+    plt.suptitle("Extracted Color Palettes", fontsize=16)
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":
-    # Example usage
-    image_path = "../test_images/Test_image1.jpg"  # Adjust path as needed
-    
-    if len(sys.argv) > 1:
-        image_path = sys.argv[1]
-    
-    if not os.path.exists(image_path):
-        print(f"Error: Image not found at {image_path}")
-        print("Usage: python run_single_image.py <path_to_image>")
-        sys.exit(1)
-    
-    results = run_single_image_comparison(
-        image_path=image_path,
-        k=8,
-        max_iter=100
-    )
+    main()
