@@ -6,8 +6,9 @@ try:
 except ImportError:
     from utils import load_image_as_array, rgb_to_lab, lab_to_rgb
 
+K = 3
 class NaiveKMeans:
-    def __init__(self, k=10, max_iter=100, tol=0.01, random_state=None):
+    def __init__(self, k=K, max_iter=100, tol=0.01, random_state=None):
         self.k = k
         self.max_iter = max_iter
         self.tol = tol
@@ -40,7 +41,7 @@ class NaiveKMeans:
                 pixels[:, np.newaxis, :] - self.centroids[np.newaxis, :, :], 
                 axis=-1
             )
-            
+
             self.labels = np.argmin(distances, axis=-1)
             
             # Update step: recalculate centroids
@@ -168,14 +169,14 @@ class NaiveKMeans:
 if __name__ == "__main__":
     # Load image
     image_path = "../test_images/Test_image1.jpg"
-    pixels = load_image_as_array(image_path)
+    pixels = load_image_as_array(image_path)[0]
 
     
     
     print(f"Image loaded: {pixels.shape[0]} pixels")
     
     # Run K-Means
-    kmeans = NaiveKMeans(k=10, max_iter=100, random_state=42)
+    kmeans = NaiveKMeans(k=K, max_iter=100, random_state=42)
     kmeans.fit(pixels)
     
     # Show results
