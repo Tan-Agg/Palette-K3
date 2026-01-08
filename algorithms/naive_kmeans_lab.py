@@ -6,7 +6,8 @@ try:
 except ImportError:
     from utils import load_image_as_array, rgb_to_lab, lab_to_rgb
 
-K = 3    
+K = 3
+    
 class NaiveKMeansLAB:
     def __init__(self, k=K, max_iter=100, tol=0.01, random_state=None):
         self.k = k
